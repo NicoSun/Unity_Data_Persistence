@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+// using UnityEngine.Events;
+
 
 public class MainManager : MonoBehaviour
 {
@@ -11,20 +13,31 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text HighScoreText;
     public GameObject GameOverText;
-    
+
     private bool m_Started = false;
     private int m_Points;
-    
+
     private bool m_GameOver = false;
 
-    
+
     // Start is called before the first frame update
     void Start()
     {
+      if (MainMenu.high_Points < 1)
+      {
+        HighScoreText.text = $"{MainMenu.playername} : {MainMenu.high_Points}";
+      }
+      else
+      {
+        HighScoreText.text = $"{MainMenu.highScoreName} : {MainMenu.high_Points}";
+      }
+      ScoreText.text = $"{MainMenu.playername} : {m_Points}";
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
+
         int[] pointCountArray = new [] {1,1,2,2,5,5};
         for (int i = 0; i < LineCount; ++i)
         {
@@ -40,7 +53,7 @@ public class MainManager : MonoBehaviour
 
     private void Update()
     {
-        if (!m_Started)
+        if (!m_Started && !m_GameOver)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -53,24 +66,38 @@ public class MainManager : MonoBehaviour
                 Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
             }
         }
-        else if (m_GameOver)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
-        }
     }
 
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = $"{MainMenu.playername} : {m_Points}";
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        AddHighScore();
+    }
+
+    public void AddHighScore()
+    {
+      if (m_Points > MainMenu.high_Points)
+      {
+        MainMenu.high_Points = m_Points;
+        MainMenu.highScoreName = MainMenu.playername;
+        HighScoreText.text = $"{MainMenu.highScoreName} : {MainMenu.high_Points}";
+      }
+
+      MainMenu.Instance.SaveScore();
+
+    }
+
+    public void Restart()
+    {
+      SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+      m_GameOver = false;
+      GameOverText.SetActive(false);
     }
 }
